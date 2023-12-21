@@ -79,10 +79,12 @@ provider "kafka" {
 | `client_key_passphrase` | The passphrase for the private key that the certificate was issued for.                                               | `""`       |
 | `tls_enabled`           | Enable communication with the Kafka Cluster over TLS.                                                                 | `true`     |
 | `skip_tls_verify`       | Skip TLS verification.                                                                                                | `false`    |
-| `sasl_username`         | Username for SASL authentication.                                                                                     | `""`       |
-| `sasl_password`         | Password for SASL authentication.                                                                                     | `""`       |
-| `sasl_mechanism`        | Mechanism for SASL authentication. Allowed values are plain, scram-sha512 and scram-sha256                            | `plain`    |
-
+| `sasl_username`         | Username for SASL authentication (special case for OAuth use clientid).                                                                                     | `""`       |
+| `sasl_password`         | Password for SASL authentication (special case for OAuth use here RSA Key path).                                                                                     | `""`       |
+| `sasl_mechanism`        | Mechanism for SASL authentication. Allowed values are plain, scram-sha512,oauthbearer and scram-sha256                            | `plain`    |
+| `oauth_audience`        | For OAuthBearer requested audience claim                            | `kafka-aud`    |
+| `oauth_token_url`        | For OAuthBearer token url for idp                            | `https://localhost/token`    |
+| `oauth_scope`        | For OAuthBearer scope to be requestion from idp                            | `kafka`    |
 ## Resources
 ### `kafka_topic`
 

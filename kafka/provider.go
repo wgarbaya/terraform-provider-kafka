@@ -77,8 +77,26 @@ func Provider() *schema.Provider {
 				Type:        schema.TypeString,
 				Optional:    true,
 				DefaultFunc: schema.EnvDefaultFunc("KAFKA_SASL_MECHANISM", "plain"),
-				Description: "SASL mechanism, can be plain, scram-sha512, scram-sha256",
+				Description: "SASL mechanism, can be plain, scram-sha512, scram-sha256, oauthbearer",
 			},
+			"oauth_audience": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("KAFKA_SASL_OAUTH_AUD", "kafka-aud"),
+				Description: "For OauthBearer requested audience claim",
+			},
+			"oauth_token_url": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("KAFKA_SASL_OAUTH_TOKEN_URL", "https://localhost/token"),
+				Description: "For OauthBearer token url for idp",
+			},
+			"oauth_scope": &schema.Schema{
+				Type:        schema.TypeString,
+				Optional:    true,
+				DefaultFunc: schema.EnvDefaultFunc("KAFKA_SASL_OAUTH_SCOPE", "kafka"),
+				Description: "For OauthBearer scope to be requestion from idp",
+			},									
 			"skip_tls_verify": &schema.Schema{
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -119,9 +137,9 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 
 	saslMechanism := d.Get("sasl_mechanism").(string)
 	switch saslMechanism {
-	case "scram-sha512", "scram-sha256", "plain":
+	case "scram-sha512", "scram-sha256", "plain", "oauthbearer":
 	default:
-		return nil, fmt.Errorf("[ERROR] Invalid sasl mechanism \"%s\": can only be \"scram-sha256\", \"scram-sha512\" or \"plain\"", saslMechanism)
+		return nil, fmt.Errorf("[ERROR] Invalid sasl mechanism \"%s\": can only be \"scram-sha256\", \"scram-sha512\", \"oauthbearer\" or \"plain\"", saslMechanism)
 	}
 
 	config := &Config{
@@ -136,6 +154,9 @@ func providerConfigure(d *schema.ResourceData) (interface{}, error) {
 		SASLMechanism:           saslMechanism,
 		TLSEnabled:              d.Get("tls_enabled").(bool),
 		Timeout:                 d.Get("timeout").(int),
+		OAUTHAud:            	 d.Get("oauth_audience").(string),
+		OAUTHTokenUrl:           d.Get("oauth_token_url").(string),
+		OAUTHScope:              d.Get("oauth_scope").(string),
 	}
 
 	if config.CACert == "" {

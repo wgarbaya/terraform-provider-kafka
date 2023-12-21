@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"time"
+	btKafka "github.com/wgarbaya/sarama-oauth-jwtbearer"
 
 	"github.com/IBM/sarama"
 	"golang.org/x/net/proxy"
@@ -25,6 +26,9 @@ type Config struct {
 	SASLUsername            string
 	SASLPassword            string
 	SASLMechanism           string
+	OAUTHAud            	string
+	OAUTHTokenUrl           string
+	OAUTHScope            	string
 }
 
 func (c *Config) newKafkaConfig() (*sarama.Config, error) {
@@ -46,9 +50,19 @@ func (c *Config) newKafkaConfig() (*sarama.Config, error) {
 		case "scram-sha256":
 			kafkaConfig.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient { return &XDGSCRAMClient{HashGeneratorFcn: SHA256} }
 			kafkaConfig.Net.SASL.Mechanism = sarama.SASLMechanism(sarama.SASLTypeSCRAMSHA256)
+		case "oauthbearer":
+			var config = btKafka.Confg{
+				ClientID: c.SASLUsername,
+				Audience: c.OAUTHAud,
+				TokenURL: c.OAUTHTokenUrl,
+				PkPath:   c.SASLPassword,
+				Scope:    c.OAUTHScope,
+			}
+			kafkaConfig.Net.SASL.Mechanism = sarama.SASLTypeOAuth
+			kafkaConfig.Net.SASL.TokenProvider = &btKafka.JWTBTokenProvider{Cfg: config}
 		case "plain":
 		default:
-			log.Fatalf("[ERROR] Invalid sasl mechanism \"%s\": can only be \"scram-sha256\", \"scram-sha512\" or \"plain\"", c.SASLMechanism)
+			log.Fatalf("[ERROR] Invalid sasl mechanism \"%s\": can only be \"scram-sha256\", \"scram-sha512\", \"oauthbearer\" or \"plain\"", c.SASLMechanism)
 		}
 		kafkaConfig.Net.SASL.Enable = true
 		kafkaConfig.Net.SASL.Password = c.SASLPassword
@@ -184,6 +198,9 @@ func (config *Config) copyWithMaskedSensitiveValues() Config {
 		config.SASLUsername,
 		"*****",
 		config.SASLMechanism,
+		config.OAUTHAud,
+		config.OAUTHTokenUrl,
+		config.OAUTHScope,
 	}
 	return copy
 }
