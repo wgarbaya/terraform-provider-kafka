@@ -1,6 +1,6 @@
 # `terraform-provider-kafka`
 [![CircleCI](https://circleci.com/gh/Mongey/terraform-provider-kafka.svg?style=svg)](https://circleci.com/gh/Mongey/terraform-provider-kafka)
-
+Do not use in production is this forked only to add Oauthbearer based Login
 A [Terraform][1] plugin for managing [Apache Kafka][2].
 
 ## Contents
